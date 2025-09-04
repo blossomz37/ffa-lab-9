@@ -1,0 +1,105 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, "3.10", "3.11"]
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+    
+    - name: Lint with flake8
+      run: |
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 tools/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Exit-zero treats all errors as warnings
+        flake8 tools/ --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+    
+    - name: Format check with black
+      run: |
+        black --check tools/
+    
+    - name: Type check with mypy
+      run: |
+        mypy tools/ --ignore-missing-imports
+    
+    - name: Test with pytest
+      run: |
+        pytest tests/ -v --cov=tools --cov-report=xml
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+
+  integration-test:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Test sample analysis
+      run: |
+        cd tools
+        python chapter_emotion_arc.py ../samples/sample_chapter.txt --csv test_output.csv
+        python chapter_lexical_diversity.py ../samples/sample_chapter.txt
+        python chapter_structural_analysis.py ../samples/sample_chapter.txt
+    
+    - name: Test memory system
+      run: |
+        cd tools
+        python -c "
+        from memory_mcp import MemoryTool
+        memory = MemoryTool('test_memory.json')
+        memory.add_memory('test', 'This is a test memory', ['test', 'ci'])
+        memories = memory.get_memories()
+        assert len(memories) > 0
+        print('Memory system test passed')
+        "
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Build Docker image
+      run: |
+        docker build -t ffa-lab-9:latest .
+    
+    - name: Test Docker container
+      run: |
+        docker run --rm ffa-lab-9:latest python -c "import tools.memory_mcp; print('Docker build successful')"

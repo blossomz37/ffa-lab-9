@@ -1,0 +1,28 @@
+# Development dependencies
+-r requirements.txt
+
+# Code formatting and linting
+black>=22.0.0
+flake8>=4.0.0
+mypy>=0.910
+isort>=5.10.0
+
+# Pre-commit hooks
+pre-commit>=2.15.0
+
+# Testing and coverage
+pytest>=6.2.0
+pytest-cov>=2.12.0
+pytest-mock>=3.6.0
+
+# Documentation
+sphinx>=4.0.0
+sphinx-rtd-theme>=1.0.0
+
+# Jupyter for interactive development
+jupyter>=1.0.0
+jupyterlab>=3.0.0
+
+# Additional development tools
+ipython>=7.0.0
+rich>=10.0.0  # For beautiful console output

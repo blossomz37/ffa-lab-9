@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # Development environment with all tools
+  dev:
+    build:
+      context: .
+      target: development
+    volumes:
+      - .:/app
+      - /app/.git  # Exclude .git from sync for performance
+    environment:
+      - PYTHONPATH=/app
+    ports:
+      - "8000:8000"  # For web servers
+      - "8888:8888"  # For Jupyter
+    command: bash -c "pip install -e . && tail -f /dev/null"
+    stdin_open: true
+    tty: true
+
+  # Production environment for running analysis
+  analyzer:
+    build:
+      context: .
+      target: production
+    volumes:
+      - ./samples:/app/samples:ro
+      - ./output:/app/output
+    environment:
+      - PYTHONPATH=/app
+    command: python tools/writers_room_v2.py
+
+  # Jupyter notebook server for interactive development
+  jupyter:
+    build:
+      context: .
+      target: development
+    volumes:
+      - .:/app
+    ports:
+      - "8888:8888"
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - PYTHONPATH=/app
+    command: jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token=''
+
+  # Web server for analysis results
+  web:
+    build:
+      context: .
+      target: production
+    volumes:
+      - ./output:/app/output:ro
+    ports:
+      - "8000:8000"
+    command: python -m http.server 8000 --directory /app/output
+
+volumes:
+  output:
