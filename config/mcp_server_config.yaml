@@ -1,0 +1,22 @@
+# MCP Server Configuration
+server:
+  host: "localhost"
+  port: 8000
+  debug: true
+  
+analysis:
+  default_window_size: 5
+  max_text_length: 100000
+  supported_formats: ["json", "csv", "markdown"]
+  
+logging:
+  level: "INFO"
+  file: "logs/mcp_server.log"
+  max_size_mb: 10
+  backup_count: 5
+
+lexicons:
+  # You can extend these lexicons for genre-specific analysis
+  positive_words_file: null
+  negative_words_file: null
+  emotion_words_file: null

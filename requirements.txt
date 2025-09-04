@@ -14,6 +14,10 @@ numpy>=1.21.0      # For numerical computations
 fastapi>=0.68.0
 uvicorn>=0.15.0
 
+# MCP (Model Context Protocol) dependencies
+mcp>=0.1.0
+pydantic>=2.0.0
+
 # For development and testing
 pytest>=6.2.0
 pytest-cov>=2.12.0

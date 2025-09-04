@@ -1,0 +1,19 @@
+# Development Configuration - Simplified for testing and development
+
+server:
+  name: "emotion-arc-analyzer-dev"
+  debug: true
+  
+analysis:
+  default_window_size: 3
+  max_text_length: 50000
+  include_sentences: true
+
+logging:
+  level: "DEBUG"
+  file: "logs/dev.log"
+
+development:
+  hot_reload: true
+  verbose_errors: true
+  log_requests: true
