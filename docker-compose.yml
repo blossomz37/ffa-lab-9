@@ -12,7 +12,6 @@ services:
     environment:
       - PYTHONPATH=/app
     ports:
-      - "8000:8000"  # For web servers
       - "8888:8888"  # For Jupyter
     command: bash -c "pip install -e . && tail -f /dev/null"
     stdin_open: true
@@ -44,6 +43,21 @@ services:
       - PYTHONPATH=/app
     command: jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token=''
 
+  # FastAPI emotion arc analysis server
+  api:
+    build:
+      context: .
+      target: development
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app
+    command: python tools/emotion_arc_api_server.py --host 0.0.0.0 --port 8000
+    depends_on:
+      - dev
+
   # Web server for analysis results
   web:
     build:
@@ -52,8 +66,8 @@ services:
     volumes:
       - ./output:/app/output:ro
     ports:
-      - "8000:8000"
-    command: python -m http.server 8000 --directory /app/output
+      - "8080:8080"
+    command: python -m http.server 8080 --directory /app/output
 
 volumes:
   output:

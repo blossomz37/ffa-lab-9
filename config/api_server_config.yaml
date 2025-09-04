@@ -1,0 +1,20 @@
+# FastAPI Server Configuration
+server:
+  host: "127.0.0.1"
+  port: 8000
+  debug: true
+  reload: true
+
+analysis:
+  max_text_length: 100000
+  default_window_size: 5
+
+logging:
+  level: "INFO"
+
+# CORS settings for web integration
+cors:
+  allow_origins: ["*"]  # In production, specify exact origins
+  allow_credentials: true
+  allow_methods: ["GET", "POST"]
+  allow_headers: ["*"]
