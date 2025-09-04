@@ -136,6 +136,9 @@ analysis_results/
 memory.json
 test_memory.json
 
+# User's private content (optional - uncomment to keep private)
+# samples/user_content/
+
 # macOS
 .DS_Store
 .AppleDouble
