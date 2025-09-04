@@ -47,8 +47,8 @@ def tokens(s: str) -> List[str]:
     return [w.lower() for w in WORD_RE.findall(s)]
 
 # --- Tiny lexicons (extend as needed) ---
-POS = {"joy","love","glad","hope","delight","cheer","smile","trust","safe","calm","relief","brave","confident","win"}
-NEG = {"sad","angry","anger","fear","afraid","terror","panic","hurt","bleed","pain","cry","fail","lose","danger","threat"}
+POS = {"joy","love","glad","hope","delight","cheer","smile","trust","safe","calm","relief","brave","confident","win","happy","pleased","laugh","grin","joyful"}
+NEG = {"sad","angry","anger","fear","afraid","terror","panic","hurt","bleed","pain","cry","fail","lose","danger","threat","sorrow","gloom","mourn","tears","grief","lonely"}
 
 EMO = {
     "joy": {"joy","delight","happy","glad","smile","cheer","pleased","laugh","grin"},
@@ -120,12 +120,30 @@ def main() -> None:
     ap.add_argument("--json", type=str, default="", help="Write summary + series to JSON")
     args = ap.parse_args()
 
+    # Input validation
+    if args.window <= 0:
+        raise ValueError(f"Window size must be positive, got {args.window}")
+    
     p = Path(args.input)
     if not p.exists():
         raise SystemExit(f"File not found: {p}")
+    
+    if not p.is_file():
+        raise SystemExit(f"Path is not a file: {p}")
 
-    text = p.read_text(encoding="utf-8", errors="ignore")
-    scores, val_roll, emo_roll, summary = analyze(text, window=args.window)
+    try:
+        text = p.read_text(encoding="utf-8", errors="ignore")
+    except Exception as e:
+        raise SystemExit(f"Error reading file {p}: {e}")
+    
+    if not text.strip():
+        print(f"Warning: File {p} appears to be empty or contains only whitespace")
+        text = ""
+
+    try:
+        scores, val_roll, emo_roll, summary = analyze(text, window=args.window)
+    except Exception as e:
+        raise SystemExit(f"Error analyzing text: {e}")
 
     print("\n=== Emotion Arc ===")
     print(f"File: {p}")
@@ -133,27 +151,33 @@ def main() -> None:
     print(f"(Rolling window = {args.window})")
 
     if args.csv:
-        out = Path(args.csv)
-        with out.open("w", encoding="utf-8", newline="") as f:
-            w = csv.writer(f)
-            header = ["sent_index","valence_raw","valence_rolling"] + [f"{k}_rolling" for k in EMO]
-            w.writerow(header)
-            for i, sc in enumerate(scores):
-                row = [sc.index, sc.valence_raw, round(val_roll[i],3) if i < len(val_roll) else ""]
-                for k in EMO:
-                    row.append(round(emo_roll[k][i],3) if i < len(emo_roll[k]) else "")
-                w.writerow(row)
-        print(f"CSV written: {out.resolve()}")
+        try:
+            out = Path(args.csv)
+            with out.open("w", encoding="utf-8", newline="") as f:
+                w = csv.writer(f)
+                header = ["sent_index","valence_raw","valence_rolling"] + [f"{k}_rolling" for k in EMO]
+                w.writerow(header)
+                for i, sc in enumerate(scores):
+                    row = [sc.index, sc.valence_raw, round(val_roll[i],3) if i < len(val_roll) else ""]
+                    for k in EMO:
+                        row.append(round(emo_roll[k][i],3) if i < len(emo_roll[k]) else "")
+                    w.writerow(row)
+            print(f"CSV written: {out.resolve()}")
+        except Exception as e:
+            print(f"Error writing CSV file: {e}")
 
     if args.json:
-        outj = Path(args.json)
-        payload = {
-            "summary": asdict(summary),
-            "valence_rolling": val_roll,
-            "emotions_rolling": emo_roll,
-        }
-        outj.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-        print(f"JSON written: {outj.resolve()}")
+        try:
+            outj = Path(args.json)
+            payload = {
+                "summary": asdict(summary),
+                "valence_rolling": val_roll,
+                "emotions_rolling": emo_roll,
+            }
+            outj.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+            print(f"JSON written: {outj.resolve()}")
+        except Exception as e:
+            print(f"Error writing JSON file: {e}")
 
 if __name__ == "__main__":
     main()
