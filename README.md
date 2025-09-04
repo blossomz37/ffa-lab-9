@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # FFA Lab 9: Building MCP Tools for AI-Assisted Writing
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
@@ -249,3 +250,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Happy coding and writing! 📝✨**
+=======
+# ffa-lab-9
+Lab 9 project with tools for chapter analysis and writing assistance
+>>>>>>> 8753d84acfed0e3998fca2d9920caf7eb261247f
