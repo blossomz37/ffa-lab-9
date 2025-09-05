@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Word Counter</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .instructions {
+            margin-bottom: 20px;
+            padding: 12px;
+            background: #e8f4fd;
+            border-radius: 5px;
+            color: #31708f;
+            font-size: 0.9em;
+            text-align: center;
+        }
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        .stat-pill {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-align: center;
+            min-width: 80px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+        .stat-pill:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+        }
+        .stat-number {
+            font-size: 1.2em;
+            font-weight: bold;
+            display: block;
+            line-height: 1;
+        }
+        .stat-label {
+            font-size: 0.7em;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+            display: block;
+        }
+        .file-input {
+            margin: 20px 0;
+            padding: 10px;
+            border: 2px dashed #ddd;
+            border-radius: 5px;
+            text-align: center;
+            background: #fafafa;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+        }
+        .export-section {
+            margin: 15px 0;
+            text-align: center;
+        }
+        .export-btn {
+            background: linear-gradient(135deg, #007acc, #005999);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .export-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+            background: linear-gradient(135deg, #0088dd, #006bb3);
+        }
+        .export-btn:active {
+            transform: translateY(0);
+        }
+        #fileName {
+            display: block;
+            margin-top: 8px;
+            font-size: 0.9em;
+            color: #666;
+            font-style: italic;
+        }
+        textarea {
+            width: 100%;
+            height: 350px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+        textarea:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Document Word Counter</h1>
+        
+        <div class="instructions">
+            <strong>Instructions:</strong> Paste text directly or upload a .txt file. 
+            Counts update automatically as you type.
+        </div>
+        
+        <div class="stats">
+            <div class="stat-pill">
+                <span class="stat-number" id="wordCount">0</span>
+                <span class="stat-label">Words</span>
+            </div>
+            <div class="stat-pill">
+                <span class="stat-number" id="sentenceCount">0</span>
+                <span class="stat-label">Sentences</span>
+            </div>
+            <div class="stat-pill">
+                <span class="stat-number" id="complexSentences">0</span>
+                <span class="stat-label">Complex</span>
+            </div>
+            <div class="stat-pill">
+                <span class="stat-number" id="paragraphCount">0</span>
+                <span class="stat-label">Paragraphs</span>
+            </div>
+            <div class="stat-pill">
+                <span class="stat-number" id="pageCount">0</span>
+                <span class="stat-label">Pages</span>
+            </div>
+            <div class="stat-pill">
+                <span class="stat-number" id="readabilityScore">0</span>
+                <span class="stat-label">Readability</span>
+            </div>
+        </div>
+        
+        <div class="file-input">
+            <p>Load from file:</p>
+            <input type="file" id="fileInput" accept=".txt,.md,.doc" />
+            <span id="fileName">No file selected</span>
+        </div>
+        
+        <div class="export-section">
+            <button id="exportBtn" class="export-btn">📄 Export with Stats</button>
+        </div>
+        
+        <textarea id="textInput" placeholder="Paste your text here or load from file above..."></textarea>
+    </div>
+
+    <script>
+        function countStats(text) {
+            // Normalize line breaks
+            text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+            
+            // Count words (split on whitespace, filter empty)
+            const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+            const wordCount = text.trim() === '' ? 0 : words.length;
+            
+            // Count sentences (basic sentence ending punctuation)
+            const sentences = text.match(/[.!?]+/g) || [];
+            const sentenceCount = sentences.length;
+            
+            // Count paragraphs (separated by double line breaks or more)
+            const paragraphs = text.trim().split(/\n\s*\n/).filter(p => p.trim().length > 0);
+            const paragraphCount = text.trim() === '' ? 0 : paragraphs.length;
+            
+            // Calculate page estimate (250 words per page)
+            const pageCount = wordCount === 0 ? 0 : Math.ceil(wordCount / 250);
+            
+            // Calculate syllables (approximate)
+            function countSyllables(word) {
+                word = word.toLowerCase();
+                if (word.length <= 3) return 1;
+                word = word.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, '');
+                word = word.replace(/^y/, '');
+                const matches = word.match(/[aeiouy]{1,2}/g);
+                return matches ? matches.length : 1;
+            }
+            
+            // Count total syllables
+            const totalSyllables = words.reduce((count, word) => {
+                return count + countSyllables(word.replace(/[^a-zA-Z]/g, ''));
+            }, 0);
+            
+            // Count complex sentences (containing commas, semicolons, or coordinating conjunctions)
+            const sentenceTexts = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+            const complexSentenceCount = sentenceTexts.filter(sentence => {
+                const s = sentence.toLowerCase();
+                return s.includes(',') || 
+                       s.includes(';') || 
+                       /\b(and|but|or|nor|for|so|yet|because|although|since|while|if|unless|when|where|whereas)\b/.test(s);
+            }).length;
+            
+            // Calculate Flesch Reading Ease Score
+            let readabilityScore = 0;
+            
+            if (wordCount > 0 && sentenceCount > 0) {
+                const avgWordsPerSentence = wordCount / sentenceCount;
+                const avgSyllablesPerWord = totalSyllables / wordCount;
+                
+                // Flesch Reading Ease: 206.835 - (1.015 × ASL) - (84.6 × ASW)
+                readabilityScore = Math.round(206.835 - (1.015 * avgWordsPerSentence) - (84.6 * avgSyllablesPerWord));
+                readabilityScore = Math.max(0, Math.min(100, readabilityScore)); // Clamp to 0-100
+            }
+            
+            return {
+                words: wordCount,
+                sentences: sentenceCount,
+                paragraphs: paragraphCount,
+                pages: pageCount,
+                readability: readabilityScore,
+                complex: complexSentenceCount
+            };
+        }
+        
+        function updateCounts() {
+            const text = document.getElementById('textInput').value;
+            const stats = countStats(text);
+            
+            document.getElementById('wordCount').textContent = stats.words.toLocaleString();
+            document.getElementById('sentenceCount').textContent = stats.sentences.toLocaleString();
+            document.getElementById('paragraphCount').textContent = stats.paragraphs.toLocaleString();
+            document.getElementById('pageCount').textContent = stats.pages.toLocaleString();
+            document.getElementById('readabilityScore').textContent = stats.readability;
+            document.getElementById('complexSentences').textContent = stats.complex;
+        }
+        
+        function handleFileLoad(event) {
+            const file = event.target.files[0];
+            const fileNameSpan = document.getElementById('fileName');
+            
+            if (file) {
+                fileNameSpan.textContent = file.name;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('textInput').value = e.target.result;
+                    updateCounts();
+                };
+                reader.readAsText(file);
+            } else {
+                fileNameSpan.textContent = 'No file selected';
+            }
+        }
+        
+        function exportWithStats() {
+            const text = document.getElementById('textInput').value;
+            const stats = countStats(text);
+            
+            if (text.trim() === '') {
+                alert('Please add some text before exporting.');
+                return;
+            }
+            
+            // Create formatted stats section
+            const statsSection = `DOCUMENT STATISTICS
+${'='.repeat(50)}
+
+📊 Word Count: ${stats.words.toLocaleString()}
+📝 Sentences: ${stats.sentences.toLocaleString()}
+🔀 Complex Sentences: ${stats.complex.toLocaleString()}
+📄 Paragraphs: ${stats.paragraphs.toLocaleString()}
+📖 Estimated Pages: ${stats.pages.toLocaleString()}
+📈 Readability Score: ${stats.readability}/100
+
+Generated: ${new Date().toLocaleString()}
+
+${'='.repeat(50)}
+
+`;
+            
+            // Combine stats with original text
+            const exportContent = statsSection + text;
+            
+            // Create and download file
+            const blob = new Blob([exportContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'document_with_stats.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        // Event listeners
+        document.getElementById('textInput').addEventListener('input', updateCounts);
+        document.getElementById('fileInput').addEventListener('change', handleFileLoad);
+        document.getElementById('exportBtn').addEventListener('click', exportWithStats);
+        
+        // Initial count
+        updateCounts();
+    </script>
+</body>
+</html>
