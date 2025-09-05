@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # MCP Server for emotion arc analysis
   mcp-server:

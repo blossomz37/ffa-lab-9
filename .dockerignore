@@ -75,7 +75,8 @@ docker-compose*.yml
 .claude/
 chats/
 scripts/
-tests/
+# Note: tests/ needed for development container
+# tests/
 conftest.py
 pytest.ini
 setup.cfg
