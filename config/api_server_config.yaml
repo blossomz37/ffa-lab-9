@@ -9,6 +9,24 @@ analysis:
   max_text_length: 100000
   default_window_size: 5
 
+# Rate limiting configuration
+rate_limiting:
+  enabled: true
+  max_requests_per_minute: 60
+  max_requests_per_hour: 600
+  # Per-endpoint limits (optional)
+  endpoint_limits:
+    "/analyze": 30  # 30 requests per minute
+    "/analyze/csv": 20
+    "/analyze/markdown": 20
+
+# Security settings
+security:
+  sanitize_input: true
+  validate_paths: true
+  max_file_size_mb: 10
+  allowed_file_extensions: [".txt", ".md", ".csv"]
+
 logging:
   level: "INFO"
 

@@ -8,6 +8,15 @@ analysis:
   default_window_size: 5
   max_text_length: 100000
   supported_formats: ["json", "csv", "markdown"]
+
+# Security settings
+security:
+  sanitize_input: true
+  validate_paths: true
+  max_file_size_mb: 10
+  allowed_file_extensions: [".txt", ".md", ".csv"]
+  # Rate limiting for MCP requests
+  max_requests_per_minute: 100
   
 logging:
   level: "INFO"

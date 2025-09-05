@@ -27,6 +27,8 @@ import asyncio
 import json
 import logging
 import argparse
+import os
+import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from dataclasses import asdict
@@ -64,14 +66,96 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class EmotionArcRequest(BaseModel):
-    """Pydantic model for emotion arc analysis requests."""
-    text: str = Field(..., description="Text to analyze for emotional progression")
-    window_size: int = Field(default=5, ge=1, le=50, description="Rolling window size for analysis")
-    output_format: str = Field(default="json", pattern="^(json|csv|markdown)$", description="Output format")
-    include_sentences: bool = Field(default=False, description="Include individual sentence analysis")
+    """Pydantic model for emotion arc analysis requests with enhanced validation."""
+    text: str = Field(
+        ..., 
+        description="Text to analyze for emotional progression",
+        min_length=1,
+        max_length=100000
+    )
+    window_size: int = Field(
+        default=5, 
+        ge=1, 
+        le=50, 
+        description="Rolling window size for analysis"
+    )
+    output_format: str = Field(
+        default="json", 
+        pattern="^(json|csv|markdown)$", 
+        description="Output format"
+    )
+    include_sentences: bool = Field(
+        default=False, 
+        description="Include individual sentence analysis"
+    )
+    
+    class Config:
+        str_strip_whitespace = True
+        str_max_length = 100000
+
+def sanitize_text(text: str) -> str:
+    """
+    Sanitize input text to prevent injection attacks.
+    Removes null bytes and control characters except newlines and tabs.
+    """
+    # Remove null bytes
+    text = text.replace('\x00', '')
+    
+    # Remove control characters except newlines, tabs, and carriage returns
+    control_chars = ''.join(chr(i) for i in range(32) if chr(i) not in '\t\n\r')
+    translator = str.maketrans('', '', control_chars)
+    
+    return text.translate(translator)
+
+def validate_file_path(file_path: str, base_dir: Optional[Path] = None) -> Path:
+    """
+    Validate and sanitize file paths to prevent path traversal attacks.
+    
+    Args:
+        file_path: The file path to validate
+        base_dir: Optional base directory to restrict access to
+        
+    Returns:
+        Validated Path object
+        
+    Raises:
+        ValueError: If path is invalid or attempts path traversal
+    """
+    # Convert to Path object
+    path = Path(file_path)
+    
+    # Resolve to absolute path
+    resolved_path = path.resolve()
+    
+    # Check for path traversal attempts
+    if '..' in file_path or file_path.startswith('/'):
+        raise ValueError("Path traversal detected or absolute paths not allowed")
+    
+    # If base_dir is provided, ensure path is within it
+    if base_dir:
+        base_dir = base_dir.resolve()
+        try:
+            resolved_path.relative_to(base_dir)
+        except ValueError:
+            raise ValueError(f"Path must be within {base_dir}")
+    
+    # Check for suspicious patterns
+    suspicious_patterns = [
+        r'\.\./', r'\.\.\\',  # Parent directory access
+        r'^~',                 # Home directory expansion
+        r'^\$',                # Environment variable
+        r'^/',                 # Absolute path (Unix)
+        r'^[A-Za-z]:',         # Absolute path (Windows)
+    ]
+    
+    for pattern in suspicious_patterns:
+        if re.search(pattern, file_path):
+            raise ValueError(f"Suspicious path pattern detected: {pattern}")
+    
+    return resolved_path
 
 class EmotionArcAnalyzer:
-    """Wrapper class for the emotion arc analysis functionality."""
+    """Wrapper class for the emotion arc analysis functionality with enhanced security."""
     
     def __init__(self, max_text_length: int = 100000):
         self.max_text_length = max_text_length
@@ -95,9 +179,12 @@ class EmotionArcAnalyzer:
         if not request.text.strip():
             raise ValueError("Text cannot be empty")
         
+        # Sanitize text input
+        sanitized_text = sanitize_text(request.text)
+        
         try:
-            # Use the existing analyze function
-            scores, val_roll, emo_roll, summary = analyze(request.text, window=request.window_size)
+            # Use the existing analyze function with sanitized text
+            scores, val_roll, emo_roll, summary = analyze(sanitized_text, window=request.window_size)
             
             # Build result dictionary
             result = {

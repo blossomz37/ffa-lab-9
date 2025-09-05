@@ -85,8 +85,6 @@ Makefile
 # Project specific test files
 test_*.py
 *_test.py
-samples/
-!samples/sample.txt
 
 # macOS files
 .DS_Store

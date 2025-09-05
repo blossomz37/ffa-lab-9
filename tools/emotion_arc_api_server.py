@@ -29,13 +29,17 @@ import json
 import logging
 import argparse
 import yaml
+import re
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 from dataclasses import asdict
 from datetime import datetime
+from functools import lru_cache
+import time
 
 # FastAPI imports
-from fastapi import FastAPI, HTTPException, Query, Body
+from fastapi import FastAPI, HTTPException, Query, Body, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
 from pydantic import BaseModel, Field, ValidationError
@@ -53,13 +57,108 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Security utilities
+def sanitize_text(text: str) -> str:
+    """
+    Sanitize input text to prevent injection attacks.
+    """
+    # Remove null bytes
+    text = text.replace('\x00', '')
+    
+    # Remove control characters except newlines, tabs, and carriage returns
+    control_chars = ''.join(chr(i) for i in range(32) if chr(i) not in '\t\n\r')
+    translator = str.maketrans('', '', control_chars)
+    
+    return text.translate(translator)
+
+def validate_file_path(file_path: str, base_dir: Optional[Path] = None) -> Path:
+    """
+    Validate and sanitize file paths to prevent path traversal attacks.
+    """
+    path = Path(file_path)
+    resolved_path = path.resolve()
+    
+    # Check for path traversal attempts
+    if '..' in file_path or file_path.startswith('/'):
+        raise ValueError("Path traversal detected or absolute paths not allowed")
+    
+    # If base_dir is provided, ensure path is within it
+    if base_dir:
+        base_dir = base_dir.resolve()
+        try:
+            resolved_path.relative_to(base_dir)
+        except ValueError:
+            raise ValueError(f"Path must be within {base_dir}")
+    
+    return resolved_path
+
+# Rate limiting implementation
+class RateLimiter:
+    """Simple in-memory rate limiter."""
+    
+    def __init__(self, max_requests: int = 60, window_seconds: int = 60):
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
+        self.requests = {}
+    
+    def is_allowed(self, client_id: str) -> bool:
+        """Check if request is allowed for given client."""
+        now = time.time()
+        
+        # Clean old entries
+        self.requests = {
+            cid: timestamps 
+            for cid, timestamps in self.requests.items()
+            if any(t > now - self.window_seconds for t in timestamps)
+        }
+        
+        # Get client's request timestamps
+        client_timestamps = self.requests.get(client_id, [])
+        
+        # Filter timestamps within window
+        recent_timestamps = [
+            t for t in client_timestamps 
+            if t > now - self.window_seconds
+        ]
+        
+        # Check if limit exceeded
+        if len(recent_timestamps) >= self.max_requests:
+            return False
+        
+        # Add current request
+        recent_timestamps.append(now)
+        self.requests[client_id] = recent_timestamps
+        
+        return True
+
 # Pydantic models for request/response validation
 class EmotionArcRequest(BaseModel):
-    """Request model for emotion arc analysis."""
-    text: str = Field(..., description="Text to analyze for emotional progression", min_length=1)
-    window_size: int = Field(default=5, ge=1, le=50, description="Rolling window size for analysis")
-    output_format: str = Field(default="json", pattern="^(json|csv|markdown)$", description="Output format")
-    include_sentences: bool = Field(default=False, description="Include individual sentence analysis")
+    """Request model for emotion arc analysis with enhanced validation."""
+    text: str = Field(
+        ..., 
+        description="Text to analyze for emotional progression", 
+        min_length=1,
+        max_length=100000
+    )
+    window_size: int = Field(
+        default=5, 
+        ge=1, 
+        le=50, 
+        description="Rolling window size for analysis"
+    )
+    output_format: str = Field(
+        default="json", 
+        pattern="^(json|csv|markdown)$", 
+        description="Output format"
+    )
+    include_sentences: bool = Field(
+        default=False, 
+        description="Include individual sentence analysis"
+    )
+    
+    class Config:
+        str_strip_whitespace = True
+        str_max_length = 100000
 
 class EmotionArcSummary(BaseModel):
     """Summary statistics from emotion analysis."""
@@ -226,8 +325,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize analyzer
+# Initialize analyzer and rate limiter
 analyzer = EmotionArcAnalyzer()
+rate_limiter = RateLimiter(max_requests=60, window_seconds=60)
 
 # API Endpoints
 
@@ -253,6 +353,7 @@ async def health_check():
 
 @app.post("/analyze", response_model=EmotionArcResult)
 async def analyze_emotion_arc(
+    req: Request,
     request: EmotionArcRequest = Body(..., description="Analysis request parameters")
 ):
     """
@@ -261,7 +362,18 @@ async def analyze_emotion_arc(
     This endpoint accepts text and returns a detailed analysis of emotional
     progression using sentiment lexicons and rolling averages.
     """
+    # Rate limiting check
+    client_id = req.client.host if req.client else "unknown"
+    if not rate_limiter.is_allowed(client_id):
+        raise HTTPException(
+            status_code=429, 
+            detail="Rate limit exceeded. Please try again later."
+        )
+    
     try:
+        # Sanitize input text
+        request.text = sanitize_text(request.text)
+        
         result = await analyzer.analyze_text(request)
         return result
     except ValueError as e:
