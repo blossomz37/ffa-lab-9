@@ -1,251 +1,297 @@
-# FFA Lab 9: Building MCP Tools for AI-Assisted Writing
+# FFA Lab 9: MCP Emotion Arc Analysis Tools
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![CI/CD Pipeline](https://github.com/yourusername/ffa-lab-9/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/ffa-lab-9/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-An educational project demonstrating how to build Model Context Protocol (MCP) tools for AI-assisted writing and authoring workflows. This repository contains a collection of Python scripts that serve as building blocks for creating sophisticated author assistance tools.
+Educational implementation of Model Context Protocol (MCP) servers for emotion and text analysis. This project demonstrates how to build secure, production-ready MCP tools that AI assistants like Claude can use for analyzing emotional progression in creative writing.
 
-## 🎯 Learning Objectives
+## 🎯 Project Overview
 
-This lab teaches students how to:
-- Build practical MCP tools using basic Python scripting
-- Create modular analysis tools for creative writing
-- Implement memory systems for AI assistants
-- Design author-focused utilities and workflows
-- Structure educational Python projects for AI tool development
-
-## 📚 What's Included
-
-### Core Analysis Tools
-- **`chapter_emotion_arc.py`** - Analyzes emotional progression through text using sentiment lexicons
-- **`chapter_beats_detection.py`** - Identifies story beats and narrative structure patterns
-- **`chapter_character_dialogue.py`** - Analyzes character dialogue patterns and voice consistency
-- **`chapter_continuity_consistency.py`** - Checks for continuity errors and inconsistencies
-- **`chapter_lexical_diversity.py`** - Measures vocabulary diversity and writing complexity
-- **`chapter_structural_analysis.py`** - Examines chapter structure and pacing
-- **`chapter_style_readability.py`** - Evaluates writing style and readability metrics
-- **`chapter_mechanics_cleanup.py`** - Identifies and suggests fixes for mechanical issues
-
-### Integration Tools
-- **`writers_room_v2.py`** - Main coordination script with unit tests
-- **`apply_editing_plan.py`** - Applies automated editing suggestions to manuscripts
-- **`generate_html_comparison.py`** - Creates visual diff reports for revisions
-- **`memory_mcp.py`** - Memory management system for AI assistants
+This repository provides:
+- **MCP Server Implementation** - Complete emotion arc analysis exposed via MCP protocol
+- **FastAPI REST Alternative** - HTTP API server for environments without MCP support
+- **Security Best Practices** - Input validation, rate limiting, path traversal protection
+- **Educational Examples** - Extended analysis tools for student projects
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.8 or higher
-- Basic familiarity with command line operations
-- Text files to analyze (sample files included)
+- Python 3.8-3.11
+- pip package manager
+- Docker (optional, for containerized deployment)
 
 ### Installation
 
-1. Clone the repository:
 ```bash
-git clone https://github.com/blossomz37/ffa-lab-9.git
+# Clone repository
+git clone https://github.com/yourusername/ffa-lab-9.git
 cd ffa-lab-9
-```
 
-2. Create a virtual environment:
-```bash
+# Create virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
-3. Install dependencies:
-```bash
+# Install dependencies (pinned versions for security)
 pip install -r requirements.txt
 ```
 
 ### Basic Usage
 
-1. **Analyze a chapter's emotional arc:**
+#### 1. Run MCP Server
 ```bash
-python tools/chapter_emotion_arc.py sample.txt --window 5 --csv emotions.csv
+python tools/emotion_arc_mcp_server.py --config config/mcp_server_config.yaml
 ```
 
-2. **Check dialogue patterns:**
+#### 2. Run FastAPI Server
 ```bash
-python tools/chapter_character_dialogue.py sample.txt --output dialogue_analysis.json
+python tools/emotion_arc_api_server.py --config config/api_server_config.yaml
+# Visit http://localhost:8000/docs for interactive API documentation
 ```
 
-3. **Generate a comprehensive analysis:**
+#### 3. Analyze Text Directly
 ```bash
-python tools/writers_room_v2.py --input sample.txt --output-dir analysis_results/
+python tools/chapter_emotion_arc.py samples/sample_chapter.txt --window 5 --csv output.csv
 ```
 
-## 🛠️ Development Setup
-
-### Using VS Code Dev Container (Recommended)
-
-This project includes a complete development container setup for consistent environments:
-
-1. Install [VS Code](https://code.visualstudio.com/) and the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
-2. Open the project in VS Code
-3. When prompted, click "Reopen in Container" or use `Ctrl+Shift+P` → "Dev Containers: Reopen in Container"
-
-The dev container includes:
-- Python 3.11 with all dependencies
-- Pre-configured linting and formatting (black, flake8, mypy)
-- Jupyter notebook support
-- Git configuration
-- VS Code extensions for Python development
-
-### Manual Development Setup
-
-If you prefer to set up your own environment:
-
+#### 4. Docker Deployment
 ```bash
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate
+# Build and run with Docker Compose
+docker-compose -f docker-compose.mcp.yml up
 
-# Install development dependencies
-pip install -r requirements-dev.txt
-
-# Install pre-commit hooks
-pre-commit install
-
-# Run tests
-pytest tests/
-
-# Format code
-black tools/
-flake8 tools/
-```
-
-### Using Docker
-
-Build and run the project in Docker:
-
-```bash
-# Build the container
-docker build -t ffa-lab-9 .
-
-# Run analysis tools
-docker run -v $(pwd)/samples:/app/samples ffa-lab-9 python tools/chapter_emotion_arc.py samples/sample.txt
-```
-
-## 📖 Educational Modules
-
-### Module 1: Text Analysis Fundamentals
-Learn how to build basic text analysis tools using Python's built-in libraries.
-
-**Key Files:** `chapter_emotion_arc.py`, `chapter_lexical_diversity.py`
-
-**Skills Learned:**
-- Regular expressions for text processing
-- Statistical analysis of text features
-- Building extensible lexicon-based tools
-
-### Module 2: Structural Analysis
-Understand how to analyze narrative structure and story elements.
-
-**Key Files:** `chapter_beats_detection.py`, `chapter_structural_analysis.py`
-
-**Skills Learned:**
-- Pattern recognition in narrative text
-- Identifying story beats and plot points
-- Measuring pacing and structure
-
-### Module 3: Character and Dialogue Analysis
-Explore techniques for analyzing character development and dialogue.
-
-**Key Files:** `chapter_character_dialogue.py`, `chapter_continuity_consistency.py`
-
-**Skills Learned:**
-- Character voice analysis
-- Dialogue attribution and consistency
-- Continuity tracking across text
-
-### Module 4: Integration and Workflow
-Learn how to combine individual tools into comprehensive workflows.
-
-**Key Files:** `writers_room_v2.py`, `apply_editing_plan.py`, `memory_mcp.py`
-
-**Skills Learned:**
-- Tool orchestration and coordination
-- Building memory systems for AI
-- Creating user-friendly interfaces
-
-## 🧪 Testing
-
-Run the test suite:
-```bash
-# Run all tests
-pytest
-
-# Run with coverage
-pytest --cov=tools
-
-# Run specific test module
-pytest tests/test_emotion_arc.py -v
+# Or build manually
+docker build -f Dockerfile.mcp -t emotion-mcp:latest .
+docker run -p 8000:8000 emotion-mcp:latest
 ```
 
 ## 📁 Project Structure
 
 ```
 ffa-lab-9/
-├── .devcontainer/          # VS Code dev container configuration
-├── .github/workflows/      # CI/CD workflows
-├── tools/                  # Main analysis tools
-│   ├── chapter_*.py       # Individual analysis modules
-│   ├── writers_room_v2.py # Main coordination script
-│   ├── memory_mcp.py      # Memory management system
-│   └── README-WRITERS ROOM.md
-├── tests/                  # Test suite
-├── samples/                # Sample text files for testing
-├── docs/                   # Additional documentation
-├── requirements.txt        # Python dependencies
-├── requirements-dev.txt    # Development dependencies
-├── Dockerfile              # Docker container configuration
-├── docker-compose.yml      # Multi-service Docker setup
-└── README.md              # This file
+├── tools/                     # Core MCP/API implementations
+│   ├── emotion_arc_mcp_server.py      # MCP server with security features
+│   ├── emotion_arc_api_server.py      # FastAPI REST server
+│   ├── emotion_arc_stdio_server.py    # Stdio communication variant
+│   ├── chapter_emotion_arc.py         # Core emotion analysis logic
+│   └── memory_mcp.py                   # Memory system for AI assistants
+│
+├── examples/                   # Educational examples for students
+│   └── writing_analysis/       # Extended analysis tools
+│       ├── chapter_beats_detection.py
+│       ├── chapter_character_dialogue.py
+│       ├── chapter_lexical_diversity.py
+│       ├── writers_room_v2.py
+│       └── ... (7 more analysis tools)
+│
+├── config/                     # Configuration files
+│   ├── mcp_server_config.yaml
+│   ├── api_server_config.yaml
+│   └── claude_desktop_config.json
+│
+├── tests/                      # Test suite
+│   ├── test_emotion_arc.py
+│   └── ... (comprehensive test coverage)
+│
+├── docs/                       # Documentation
+│   ├── DEPENDENCY_MANAGEMENT.md
+│   ├── MCP_DOCKER_GUIDE.md
+│   └── ... (10 documentation files)
+│
+├── scripts/                    # Utility scripts
+│   ├── setup_mcp_development.sh
+│   ├── start_api_server.sh
+│   └── quick_analyze.py
+│
+├── samples/                    # Example text files
+├── output/                     # Analysis results directory
+│
+├── requirements.txt            # Production dependencies (pinned)
+├── requirements-dev.txt        # Development dependencies (pinned)
+├── Dockerfile                  # Multi-stage production container
+├── Dockerfile.mcp              # MCP-specific container (secured)
+├── docker-compose.yml          # Standard deployment
+├── docker-compose.mcp.yml      # MCP deployment
+├── .dockerignore              # Optimized build context
+├── .gitignore                 # Version control exclusions
+└── CLAUDE.md                  # Claude Code integration guide
 ```
 
-## 🎓 Learning Exercises
+## 🔒 Security Features
 
-### Exercise 1: Extend the Emotion Lexicon
-Modify `chapter_emotion_arc.py` to include genre-specific emotion words for your favorite type of story.
+### Recent Security Improvements (v1.1.0)
 
-### Exercise 2: Create a New Analysis Tool
-Build a new tool that analyzes [specific aspect] using the existing tools as templates.
+1. **Docker Security**
+   - Non-root user execution (appuser)
+   - Security updates applied during build
+   - Minimal attack surface with slim base images
 
-### Exercise 3: Build an MCP Server
-Convert one of the analysis tools into a proper MCP server that can be used with AI assistants.
+2. **Input Validation**
+   - Text sanitization (removes control characters, null bytes)
+   - Path traversal protection
+   - File size limits (100KB max)
+   - Pydantic models with strict validation
 
-### Exercise 4: Create Visualization
-Add matplotlib/plotly visualization to any of the analysis tools to create charts and graphs.
+3. **Rate Limiting**
+   - 60 requests/minute per IP (configurable)
+   - Per-endpoint limits available
+   - In-memory tracking with automatic cleanup
+
+4. **Dependency Security**
+   - All packages pinned to exact versions
+   - Regular security scanning in CI/CD
+   - Minimal dependency footprint
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+pytest
+
+# With coverage report
+pytest --cov=tools --cov-report=html
+
+# Run specific test
+pytest tests/test_emotion_arc.py -v
+
+# Lint and format checks
+black tools/ --check
+flake8 tools/
+mypy tools/
+```
+
+## 🛠️ Development
+
+### Setting Up Development Environment
+
+```bash
+# Install development dependencies
+pip install -r requirements-dev.txt
+
+# Install pre-commit hooks
+pre-commit install
+
+# Run development servers with hot reload
+uvicorn tools.emotion_arc_api_server:app --reload --port 8000
+```
+
+### API Documentation
+
+When running the FastAPI server, interactive documentation is available at:
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
+
+### MCP Integration with Claude Desktop
+
+1. Copy config to Claude Desktop:
+```bash
+cp config/claude_desktop_config.json ~/Library/Application\ Support/Claude/
+```
+
+2. The MCP server will be available in Claude Desktop for emotion analysis tasks
+
+## 📚 For Students and Educators
+
+### Learning Modules
+
+#### Module 1: Core MCP Implementation
+- Study `tools/emotion_arc_mcp_server.py` for MCP protocol basics
+- Learn async request handling and error management
+- Understand tool registration and parameter validation
+
+#### Module 2: REST API Design
+- Explore `tools/emotion_arc_api_server.py` for FastAPI patterns
+- Learn about OpenAPI documentation
+- Practice with rate limiting and CORS
+
+#### Module 3: Text Analysis Techniques
+- Core emotion analysis in `chapter_emotion_arc.py`
+- Lexicon-based sentiment analysis
+- Rolling window calculations for trend detection
+
+#### Module 4: Extended Analysis Tools
+Browse `examples/writing_analysis/` for:
+- Narrative structure detection
+- Character dialogue analysis
+- Lexical diversity metrics
+- Style and readability assessment
+
+### Project Ideas for Students
+
+1. **Extend Lexicons** - Add genre-specific emotion words
+2. **New Analysis Tools** - Create tools for plot analysis, theme detection
+3. **Visualization** - Add matplotlib/plotly charts to outputs
+4. **Machine Learning** - Integrate transformer models for deeper analysis
+5. **Web Interface** - Build a React/Vue frontend for the API
+
+## 🐳 Docker Deployment
+
+### Production Deployment
+
+```bash
+# Build optimized production image
+docker build -f Dockerfile -t emotion-arc:prod .
+
+# Run with environment variables
+docker run -d \
+  -p 8000:8000 \
+  -e API_KEY=your_key \
+  --name emotion-arc \
+  emotion-arc:prod
+```
+
+### Docker Compose Stack
+
+```bash
+# Start full stack (API + MCP servers)
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+## 📈 CI/CD Pipeline
+
+GitHub Actions automatically:
+- Runs tests on Python 3.8-3.11
+- Checks code formatting (black, flake8)
+- Performs type checking (mypy)
+- Builds Docker images
+- Runs security scans
 
 ## 🤝 Contributing
 
-This is an educational project! Contributions are welcome, especially:
-- New analysis tools
-- Improved documentation
-- Additional test cases
-- Example text samples
-- Tutorial improvements
+Contributions welcome! Please see [CONTRIBUTING.md](docs/CONTRIBUTING.md) for guidelines.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
-
-## 📚 Additional Resources
-
-- [Model Context Protocol Documentation](https://docs.anthropic.com/en/docs/build-with-claude/mcp)
-- [Python Text Processing Guide](https://docs.python.org/3/howto/regex.html)
-- [Creative Writing Analysis Techniques](docs/writing-analysis-techniques.md)
-- [Building AI Tools for Authors](docs/ai-tools-guide.md)
+Areas for contribution:
+- Additional analysis algorithms
+- Performance optimizations
+- Documentation improvements
+- Test coverage expansion
+- UI/UX enhancements
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
-- Built for educational purposes to teach MCP tool development
-- Inspired by computational linguistics and creative writing research
-- Designed to be beginner-friendly while demonstrating advanced concepts
+- Built for educational purposes at [Your Institution]
+- Inspired by computational linguistics research
+- Designed for integration with Anthropic's Claude via MCP
+
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/yourusername/ffa-lab-9/issues)
+- **Documentation**: See `/docs` folder
+- **Examples**: Check `/examples/writing_analysis`
 
 ---
 
-**Happy coding and writing! 📝✨**
+**Version**: 1.1.0  
+**Last Updated**: January 2025  
+**Status**: Production Ready with Security Enhancements
+
+*Happy analyzing! 📊✨*
