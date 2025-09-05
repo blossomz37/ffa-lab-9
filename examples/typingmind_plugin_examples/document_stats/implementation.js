@@ -2,7 +2,6 @@ function safeGetLastUserPlainText(authorizedResources) {
   if (!authorizedResources || !authorizedResources.lastUserMessage) return null;
   const content = authorizedResources.lastUserMessage.content;
   if (!Array.isArray(content)) return null;
-  // Find first text segment
   for (const item of content) {
     if (item && (item.type === 'text' || item.type === 'plain_text')) {
       if (typeof item.text === 'string') return item.text;
@@ -36,18 +35,10 @@ function computeStats(rawText, wordsPerPage, computeReadability) {
   const trimmed = text.trim();
   if (!trimmed) {
     return {
-      words: 0,
-      sentences: 0,
-      complexSentences: 0,
-      paragraphs: 0,
-      pages: 0,
-      readability: 0,
-      avgWordsPerSentence: 0,
-      avgSyllablesPerWord: 0,
-      processingMs: Math.round(nowMs() - start)
+      words: 0, sentences: 0, complexSentences: 0, paragraphs: 0, pages: 0, readability: 0,
+      avgWordsPerSentence: 0, avgSyllablesPerWord: 0, processingMs: Math.round(nowMs() - start)
     };
   }
-
   const wordsArr = trimmed.split(/\s+/).filter(w => w.length > 0);
   const words = wordsArr.length;
   const sentenceEndings = trimmed.match(/[.!?]+/g) || [];
@@ -55,19 +46,13 @@ function computeStats(rawText, wordsPerPage, computeReadability) {
   const paragraphArr = trimmed.split(/\n\s*\n/).filter(p => p.trim().length > 0);
   const paragraphs = paragraphArr.length;
   const pages = words === 0 ? 0 : Math.ceil(words / Math.max(1, wordsPerPage));
-
-  // Complex sentence heuristic
   const sentenceTexts = trimmed.split(/[.!?]+/).filter(s => s.trim().length > 0);
   const complexSentences = sentenceTexts.filter(s => {
     const lower = s.toLowerCase();
-    return /,|;/.test(lower) || /\b(and|but|or|nor|for|so|yet|because|although|since|while|if|unless|when|where|whereas)\b/.test(lower);
+    return /,|;/.test(lower) || /\(and|but|or|nor|for|so|yet|because|although|since|while|if|unless|when|where|whereas)\/.test(lower);
   }).length;
-
-  // Syllables
   let totalSyllables = 0;
-  for (const w of wordsArr) {
-    totalSyllables += countSyllables(w.replace(/[^a-zA-Z]/g, ''));
-  }
+  for (const w of wordsArr) totalSyllables += countSyllables(w.replace(/[^a-zA-Z]/g, ''));
   const avgWordsPerSentence = sentences > 0 ? words / sentences : 0;
   const avgSyllablesPerWord = words > 0 ? totalSyllables / words : 0;
   let readability = 0;
@@ -75,70 +60,64 @@ function computeStats(rawText, wordsPerPage, computeReadability) {
     readability = Math.round(206.835 - (1.015 * avgWordsPerSentence) - (84.6 * avgSyllablesPerWord));
     readability = Math.max(0, Math.min(100, readability));
   }
-
   return {
-    words,
-    sentences,
-    complexSentences,
-    paragraphs,
-    pages,
-    readability,
+    words, sentences, complexSentences, paragraphs, pages, readability,
     avgWordsPerSentence: Number(avgWordsPerSentence.toFixed(2)),
     avgSyllablesPerWord: Number(avgSyllablesPerWord.toFixed(3)),
     processingMs: Math.round(nowMs() - start)
   };
 }
 
-async function document_stats(params, userSettings, authorizedResources) {
+async function document_stats_ai(params, userSettings, authorizedResources) {
   const explicitText = params && typeof params.text === 'string' ? params.text : null;
   const fallback = safeGetLastUserPlainText(authorizedResources);
   const source = explicitText ? 'parameter:text' : (fallback ? 'last_user_message' : 'none');
   const textToAnalyze = explicitText || fallback || '';
-
   const wordsPerPageSetting = Number(userSettings?.words_per_page) || 250;
   const computeReadability = (userSettings?.enable_readability !== 'No');
   const stats = computeStats(textToAnalyze, wordsPerPageSetting, computeReadability);
+  const responseFormat = (params && typeof params.response_format === 'string') ? params.response_format : 'markdown';
+  const includePreviews = !!(params && params.include_previews === true);
 
-  if (source === 'none') {
-    return {
-      cards: [
-        {
-            type: 'text',
-            text: 'No text provided and no last user message text content was found. Provide a `text` parameter or send a message first.'
-        }
-      ]
-    };
+  const meta = {
+    source, wordsPerPage: wordsPerPageSetting, readabilityComputed: computeReadability
+  };
+
+  // Lightweight tips the assistant can weave into its summary
+  const suggestions = [];
+  if (stats.avgWordsPerSentence > 25) suggestions.push('Consider shortening sentences for clarity.');
+  if (stats.readability && stats.readability < 50) suggestions.push('Reading ease is low; simplify vocabulary or structure.');
+  if (stats.complexSentences > Math.max(1, Math.round(stats.sentences * 0.3))) suggestions.push('There are many complex sentences; vary sentence length.');
+
+  const previews = {};
+  if (includePreviews) {
+    const lines = [
+      '# Document Statistics',
+      `- Words: ${stats.words.toLocaleString()}`,
+      `- Sentences: ${stats.sentences.toLocaleString()}`,
+      `- Complex Sentences: ${stats.complexSentences.toLocaleString()}`,
+      `- Paragraphs: ${stats.paragraphs.toLocaleString()}`,
+      `- Estimated Pages (@${wordsPerPageSetting} wpp): ${stats.pages.toLocaleString()}`,
+      `- Avg Words/Sentence: ${stats.avgWordsPerSentence}`,
+      `- Avg Syllables/Word: ${stats.avgSyllablesPerWord}`,
+      `- Readability (Flesch 0-100): ${computeReadability ? stats.readability : 'Skipped'}`,
+      `- Source: ${source}`
+    ];
+    previews.markdown = lines.join('\n');
+    previews.html = `<div><h2>Document Statistics</h2><ul>
+<li><b>Words:</b> ${stats.words.toLocaleString()}</li>
+<li><b>Sentences:</b> ${stats.sentences.toLocaleString()}</li>
+<li><b>Complex Sentences:</b> ${stats.complexSentences.toLocaleString()}</li>
+<li><b>Paragraphs:</b> ${stats.paragraphs.toLocaleString()}</li>
+<li><b>Estimated Pages (@${wordsPerPageSetting} wpp):</b> ${stats.pages.toLocaleString()}</li>
+<li><b>Avg Words/Sentence:</b> ${stats.avgWordsPerSentence}</li>
+<li><b>Avg Syllables/Word:</b> ${stats.avgSyllablesPerWord}</li>
+<li><b>Readability (Flesch 0-100):</b> ${computeReadability ? stats.readability : 'Skipped'}</li>
+<li><b>Source:</b> ${source}</li>
+</ul></div>`;
   }
 
-  const lines = [
-    'Document Statistics',
-    '-------------------',
-    `Words: ${stats.words.toLocaleString()}`,
-    `Sentences: ${stats.sentences.toLocaleString()}`,
-    `Complex Sentences: ${stats.complexSentences.toLocaleString()}`,
-    `Paragraphs: ${stats.paragraphs.toLocaleString()}`,
-    `Estimated Pages (@${wordsPerPageSetting} wpp): ${stats.pages.toLocaleString()}`,
-    `Avg Words/Sentence: ${stats.avgWordsPerSentence}`,
-    `Avg Syllables/Word: ${stats.avgSyllablesPerWord}`,
-    `Readability (Flesch 0-100): ${computeReadability ? stats.readability : 'Skipped'}`,
-    `Processing Time: ${stats.processingMs} ms`,
-    `Source: ${source}`
-  ];
-
-  const cards = [
-    {
-      type: 'text',
-      text: lines.join('\n')
-    }
-  ];
-
-  const includeJson = params && params.include_json === true;
-  if (includeJson || userSettings?.return_json_card === 'Yes') {
-    cards.push({
-      type: 'text',
-      text: 'Raw JSON:\n' + JSON.stringify({ ...stats, source, wordsPerPage: wordsPerPageSetting, readabilityComputed: computeReadability }, null, 2)
-    });
-  }
-
-  return { cards };
+  return {
+    stats, meta, suggestions, responseFormat, previews
+  };
 }
