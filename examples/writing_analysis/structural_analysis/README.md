@@ -2,6 +2,20 @@
 
 This directory contains two approaches to analyzing written works:
 
+## Quickstart - Command Lines
+To use the analysis tools:
+
+1. Activate the environment:
+   source nlp_env/bin/activate
+
+2. Run the fast analysis:
+   python3 chapter_structural_analysis.py your_chapter.txt
+
+3. Run the comprehensive NLP analysis:
+   python3 novel_structural_analysis.py your_novel.txt --output analysis.json --html report.html
+
+4. Deactivate whe
+
 ## Scripts
 
 ### 1. `chapter_structural_analysis.py` (Original - Fast & Lightweight)
@@ -69,7 +83,7 @@ Main characters:
 
 ### Quick Setup (Recommended):
 ```bash
-cd examples/writing_analysis
+cd examples/writing_analysis/structural_analysis
 ./setup_nlp_analysis.sh
 ```
 
