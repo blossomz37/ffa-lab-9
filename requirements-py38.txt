@@ -1,0 +1,20 @@
+# Python 3.8 compatible versions
+# Use these versions for broader compatibility
+
+# Data analysis and visualization  
+matplotlib==3.7.5    # Last version supporting Python 3.8
+plotly==5.24.1      # Compatible with Py3.8
+pandas==2.0.3       # Last version for Py3.8 
+numpy==1.24.4       # Last version for Py3.8
+
+# Web server and API
+fastapi==0.115.5    # Compatible version
+uvicorn==0.32.1     # Compatible version
+pyyaml==6.0.1       # Compatible
+
+# MCP and validation
+pydantic==2.10.3    # Compatible with Py3.8
+
+# Testing dependencies
+pytest==8.3.4       # Compatible
+pytest-cov==5.0.0   # Compatible

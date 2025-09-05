@@ -1,22 +1,22 @@
 # Core dependencies for the writing analysis tools
-# Pinned to exact versions for security and reproducibility
+# Compatible with Python 3.8-3.11
 
 # Data analysis and visualization
-matplotlib==3.10.3  # For visualization features
-plotly==6.3.0       # For interactive charts  
-pandas==2.2.3       # For data manipulation
-numpy==2.3.1        # For numerical computations
+matplotlib>=3.7.0,<4.0.0  # For visualization features (3.7.5 for Py3.8, 3.10+ for Py3.11)
+plotly>=5.0.0,<7.0.0      # For interactive charts  
+pandas>=2.0.0,<3.0.0      # For data manipulation
+numpy>=1.21.0,<2.0.0      # For numerical computations (1.24 for Py3.8, 1.26+ for Py3.11)
 
 # Web server and API
-fastapi==0.116.1    # FastAPI web framework
-uvicorn==0.35.0     # ASGI server
-pyyaml==6.0.1       # YAML configuration support
+fastapi>=0.100.0,<0.120.0  # FastAPI web framework
+uvicorn>=0.15.0,<0.40.0    # ASGI server
+pyyaml>=6.0,<7.0           # YAML configuration support
 
 # MCP (Model Context Protocol) and validation
-pydantic==2.11.7    # Data validation using Python type annotations
+pydantic>=2.0.0,<3.0.0     # Data validation using Python type annotations
 # Note: mcp package version depends on installation source
 # mcp>=1.0.0
 
 # Testing dependencies
-pytest==8.4.1       # Testing framework
-pytest-cov==6.2.1   # Coverage plugin for pytest
+pytest>=7.0.0,<9.0.0       # Testing framework
+pytest-cov>=4.0.0,<7.0.0   # Coverage plugin for pytest
