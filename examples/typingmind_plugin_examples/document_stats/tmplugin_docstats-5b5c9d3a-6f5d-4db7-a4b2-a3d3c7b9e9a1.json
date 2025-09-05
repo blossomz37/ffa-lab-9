@@ -1,0 +1,65 @@
+{
+  "id": "document_stats",
+  "uuid": "5b5c9d3a-6f5d-4db7-a4b2-a3d3c7b9e9a1",
+  "emoji": "📝",
+  "title": "Document Stats",
+  "iconURL": null,
+  "overviewMarkdown": "## Document Stats Plugin\n\nFast, local analysis of a block of text. Returns counts only (no original text).\n\nReports: Words, Sentences, Complex Sentences, Paragraphs, Estimated Pages (configurable words/page), Flesch Reading Ease (0–100).\n\nIf no `text` parameter is provided, the plugin analyzes the last user message (requires permission).\n\nComplex sentence heuristic: sentence containing a comma, semicolon, or coordinating/subordinating conjunction (and, but, or, nor, for, so, yet, because, although, since, while, if, unless, when, where, whereas).\n\nAll processing is client-side; no network calls.\n",
+  "openaiSpec": {
+    "name": "document_stats",
+    "description": "Compute document statistics (words, sentences, complex sentences, paragraphs, avg words/sentence, avg syllables/word, estimated pages, optional readability) from provided text or last user message without returning the original text.",
+    "parameters": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "(Optional) Text to analyze. If omitted, plugin will attempt to use the last user message's text content."
+        },
+        "include_json": {
+          "type": "boolean",
+          "description": "If true, add a raw JSON card regardless of user setting."
+        }
+      }
+    }
+  },
+  "outputType": "cards",
+  "authenticationType": "AUTH_TYPE_NONE",
+  "implementationType": "javascript",
+  "permissions": [
+    "read_last_user_message"
+  ],
+  "userSettings": [
+    {
+      "name": "words_per_page",
+      "type": "number",
+      "label": "Words Per Page",
+      "description": "Used for estimated pages calculation.",
+      "defaultValue": 250
+    },
+    {
+      "name": "enable_readability",
+      "type": "enum",
+      "values": [
+        "Yes",
+        "No"
+      ],
+      "label": "Compute Readability",
+      "defaultValue": "Yes",
+      "description": "Toggle Flesch Reading Ease calculation (skip for very large texts)."
+    },
+    {
+      "name": "return_json_card",
+      "type": "enum",
+      "values": [
+        "Yes",
+        "No"
+      ],
+      "label": "Add Raw JSON Card",
+      "defaultValue": "No",
+      "description": "When 'Yes', include a second card containing raw JSON of the stats."
+    }
+  ],
+  "dynamicContextEndpoints": [],
+  "sourceUUID": null
+}
