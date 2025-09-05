@@ -72,14 +72,14 @@ The JSON file contains:
 
 The tool tracks these emotional dimensions:
 
-1. **Joy**: happiness, delight, pleasure, amusement
-2. **Sadness**: sorrow, grief, melancholy, despair  
-3. **Anger**: rage, fury, irritation, annoyance
-4. **Fear**: anxiety, terror, dread, worry
-5. **Trust**: confidence, faith, security, safety
-6. **Disgust**: revulsion, nausea, contempt
-7. **Surprise**: shock, astonishment, amazement
-8. **Anticipation**: expectation, hope, eagerness
+1. **Joy**: happiness, delight, pleasure, amusement, partnership, cooperation, solidarity, loyalty, relief, satisfaction, warmth, competence, pride, steadiness, understanding, connection, rapport, chemistry, support
+2. **Sadness**: sorrow, grief, melancholy, despair, guilt, shame, burden, weight, responsibility, failure, inadequacy, crushing, heavy, regret, blame, fault
+3. **Anger**: rage, fury, irritation, annoyance, defiance, fierce, contempt, scorn, bitter, cold, steel, iron
+4. **Fear**: anxiety, terror, dread, worry, unease, wrongness, foreboding, creeping, haunting, unsettling, eerie, ominous, sinister, menacing, lurking, looming, chilling
+5. **Trust**: confidence, faith, security, safety, reliability, dependable, solid, steady, grounded, stable, certain, partnership, alliance
+6. **Disgust**: revulsion, nausea, contempt, disdain, scorn, cynicism, skepticism, dismissal, loathing, hatred
+7. **Surprise**: shock, astonishment, amazement, confusion, bewilderment, disorientation, uncertainty, questioning, doubt, haze, blur, static, lag, dizzy, spinning, lost
+8. **Anticipation**: expectation, hope, eagerness, tension, suspense, pressure, urgency, countdown, mounting, building, escalating, tightening, coiling, determination, resolve, grit, drive, will, focus, mission
 
 ## How It Works
 

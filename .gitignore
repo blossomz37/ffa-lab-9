@@ -160,3 +160,7 @@ test_output.*
 # Miscellaneous
 chats/
 .DS_Store
+.DS_Store
+tools/.DS_Store
+.DS_Store
+tools/.DS_Store
