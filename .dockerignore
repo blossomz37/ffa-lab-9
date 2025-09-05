@@ -1,0 +1,109 @@
+# Git files
+.git/
+.gitignore
+.github/
+
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+*.cover
+.coverage.*
+
+# Documentation
+docs/_build/
+*.md
+!README.md
+CHANGELOG.md
+CONTRIBUTING.md
+
+# Jupyter notebooks
+*.ipynb_checkpoints
+.ipynb_checkpoints/
+
+# Logs and databases
+*.log
+logs/
+*.sql
+*.sqlite
+*.db
+
+# Output and temporary files
+output/
+*.csv
+*.json
+!config/*.json
+!config/*.yaml
+tmp/
+temp/
+
+# Docker files (prevent recursive copying)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Development and CI/CD
+.pre-commit-config.yaml
+.claude/
+chats/
+scripts/
+tests/
+conftest.py
+pytest.ini
+setup.cfg
+setup.py
+Makefile
+
+# Project specific test files
+test_*.py
+*_test.py
+samples/
+!samples/sample.txt
+
+# macOS files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Node modules (if any frontend exists)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Environment files
+.env
+.env.*
+!.env.example
