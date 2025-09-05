@@ -47,19 +47,29 @@ def sentences(text: str) -> List[str]:
 def tokens(s: str) -> List[str]:
     return [w.lower() for w in WORD_RE.findall(s)]
 
-# --- Tiny lexicons (extend as needed) ---
-POS = {"joy","love","glad","hope","delight","cheer","smile","trust","safe","calm","relief","brave","confident","win","happy","pleased","laugh","grin","joyful"}
-NEG = {"sad","angry","anger","fear","afraid","terror","panic","hurt","bleed","pain","cry","fail","lose","danger","threat","sorrow","gloom","mourn","tears","grief","lonely"}
+# --- Expanded lexicons for literary text ---
+POS = {
+    "joy","love","glad","hope","delight","cheer","smile","trust","safe","calm","relief","brave","confident","win","happy","pleased","laugh","grin","joyful",
+    "warm","bright","light","gentle","sweet","tender","embrace","comfort","peace","serene","bliss","content","elated","euphoric","radiant","vibrant",
+    "success","victory","triumph","accomplish","achieve","prosper","thrive","flourish","bloom","shine","sparkle","gleam","glow","golden","sunny"
+}
+NEG = {
+    "sad","angry","anger","fear","afraid","terror","panic","hurt","bleed","pain","cry","fail","lose","danger","threat","sorrow","gloom","mourn","tears","grief","lonely",
+    "dark","darkness","shadow","cold","harsh","bitter","cruel","violent","brutal","savage","vicious","hostile","menacing","ominous","sinister","evil",
+    "decay","rot","death","dead","dying","corpse","grave","tomb","funeral","nightmare","horror","monster","demon","hell","torment","agony","anguish",
+    "broken","shatter","collapse","destroy","ruin","devastate","waste","empty","hollow","void","barren","desolate","abandoned","forsaken","lost",
+    "tremble","shake","shiver","quiver","flinch","recoil","shrink","cower","cringe","wince","gasp","choke","suffocate","drown","bleed","wound","scar"
+}
 
 EMO = {
-    "joy": {"joy","delight","happy","glad","smile","cheer","pleased","laugh","grin"},
-    "sadness": {"sad","sorrow","gloom","mourn","cry","tears","grief","lonely"},
-    "anger": {"anger","angry","rage","fury","irritate","annoyed","hate","jealous"},
-    "fear": {"fear","afraid","scare","terror","panic","anxiety","dread","threat"},
-    "trust": {"trust","safe","secure","faith","reliance","certain"},
-    "disgust": {"disgust","gross","nausea","repulse","vile","filthy","revolt"},
-    "surprise": {"surprise","shock","startle","astonish","sudden","unexpected"},
-    "anticipation": {"anticipate","eager","expect","await","hope","yearn","ready"},
+    "joy": {"joy","delight","happy","glad","smile","cheer","pleased","laugh","grin","bliss","elated","euphoric","radiant","vibrant","warm","bright","comfort","peace","serene","triumph","victory","shine","sparkle","gleam","glow"},
+    "sadness": {"sad","sorrow","gloom","mourn","cry","tears","grief","lonely","empty","hollow","void","desolate","abandoned","forsaken","lost","broken","despair","melancholy","woe","lament"},
+    "anger": {"anger","angry","rage","fury","irritate","annoyed","hate","jealous","hostile","vicious","brutal","savage","cruel","violent","bitter","harsh","menacing","wrath","seething","livid"},
+    "fear": {"fear","afraid","scare","terror","panic","anxiety","dread","threat","horror","nightmare","tremble","shake","shiver","quiver","flinch","recoil","shrink","cower","cringe","wince","ominous","sinister","evil","menace"},
+    "trust": {"trust","safe","secure","faith","reliance","certain","confident","brave","calm","relief","gentle","tender","embrace","comfort","sanctuary","haven"},
+    "disgust": {"disgust","gross","nausea","repulse","vile","filthy","revolt","decay","rot","putrid","foul","rotten","corrupt","contaminated","toxic","poison"},
+    "surprise": {"surprise","shock","startle","astonish","sudden","unexpected","amazed","stunned","bewildered","confused","perplexed","baffled"},
+    "anticipation": {"anticipate","eager","expect","await","hope","yearn","ready","tension","suspense","waiting","imminent","approaching","looming","forthcoming"},
 }
 
 @dataclass

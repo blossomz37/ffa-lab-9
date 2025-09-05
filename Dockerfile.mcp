@@ -1,0 +1,42 @@
+# Dockerfile for MCP and API servers
+FROM python:3.11-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Create app directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy and install requirements
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+# Install MCP and FastAPI dependencies explicitly
+RUN pip install mcp>=0.1.0 pydantic>=2.0.0 fastapi>=0.68.0 uvicorn>=0.15.0
+
+# Copy application code
+COPY tools/ ./tools/
+COPY config/ ./config/
+COPY samples/ ./samples/
+
+# Create output directory
+RUN mkdir -p /app/output
+
+# Expose ports
+EXPOSE 8000 9000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD python -c "import mcp; import fastapi; print('OK')" || exit 1
+
+# Default command (can be overridden)
+CMD ["python", "--version"]

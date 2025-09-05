@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # MCP Server for emotion arc analysis
+  mcp-server:
+    build:
+      context: .
+      target: development
+    volumes:
+      - .:/app
+      - ./config:/app/config:ro
+    environment:
+      - PYTHONPATH=/app
+      - MCP_SERVER_NAME=emotion-arc-analyzer
+      - MCP_LOG_LEVEL=INFO
+    command: python tools/emotion_arc_mcp_server.py --config config/mcp_server_config.yaml
+    ports:
+      - "9000:9000"  # MCP server port
+    healthcheck:
+      test: ["CMD", "python", "-c", "import mcp; print('OK')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - mcp-network
+
+  # API Server (fallback/alternative to MCP)
+  api:
+    build:
+      context: .
+      target: development
+    volumes:
+      - .:/app
+      - ./config:/app/config:ro
+    environment:
+      - PYTHONPATH=/app
+    command: python tools/emotion_arc_api_server.py --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - mcp-network
+
+  # Development environment for testing
+  dev:
+    build:
+      context: .
+      target: development
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app
+    command: bash -c "pip install -e . && tail -f /dev/null"
+    stdin_open: true
+    tty: true
+    networks:
+      - mcp-network
+
+networks:
+  mcp-network:
+    driver: bridge

@@ -16,7 +16,8 @@ uvicorn>=0.15.0
 pyyaml>=6.0
 
 # MCP (Model Context Protocol) dependencies
-mcp>=0.1.0
+# Note: If mcp package is not available, install from source
+# mcp>=0.1.0
 pydantic>=2.0.0
 
 # For development and testing

@@ -156,3 +156,6 @@ test_memory.json
 *.temp
 temp_*
 test_output.*
+
+# Miscellaneous
+chats/
