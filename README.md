@@ -56,7 +56,10 @@ python tools/chapter_emotion_arc.py samples/sample_chapter.txt --window 5 --csv 
 
 #### 4. Docker Deployment
 ```bash
-# Build and run with Docker Compose
+# Simplified deployment (recommended)
+docker-compose -f docker-compose.simple.yml up
+
+# Or use MCP-specific deployment
 docker-compose -f docker-compose.mcp.yml up
 
 # Or build manually
@@ -64,10 +67,8 @@ docker build -f Dockerfile.mcp -t emotion-mcp:latest .
 docker run -p 8000:8000 emotion-mcp:latest
 ```
 
-## Success Message:
-The emotion arc API is now running successfully at http://localhost:8000! 
-Visit http://localhost:8000/docs for the interactive API
-  documentation.
+**✅ Success!** The emotion arc API is now running at http://localhost:8000!  
+Visit http://localhost:8000/docs for interactive API documentation.
 
 
 ## 📁 Project Structure
@@ -248,7 +249,10 @@ docker run -d \
 ### Docker Compose Stack
 
 ```bash
-# Start full stack (API + MCP servers)
+# Start simplified stack (recommended)
+docker-compose -f docker-compose.simple.yml up -d
+
+# Or start full development stack
 docker-compose up -d
 
 # View logs
