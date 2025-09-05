@@ -52,8 +52,8 @@ class TestEmotionArc(unittest.TestCase):
         pos_score = score_sentence(0, positive_sentence)
         neg_score = score_sentence(1, negative_sentence)
         
-        self.assertGreater(pos_score.valence, 0)
-        self.assertLess(neg_score.valence, 0)
+        self.assertGreater(pos_score.valence_raw, 0)
+        self.assertLess(neg_score.valence_raw, 0)
 
 
 if __name__ == '__main__':
