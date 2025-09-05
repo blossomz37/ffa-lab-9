@@ -13,7 +13,16 @@ from typing import Any, Dict, List
 # Add parent directory to path to import chapter_emotion_arc
 sys.path.insert(0, str(Path(__file__).parent))
 from chapter_emotion_arc import analyze
-from emotion_report_generator import generate_emotion_report
+
+# Add examples directory to path for emotion_report_generator
+examples_path = Path(__file__).parent.parent / "examples" / "writing_analysis"
+sys.path.insert(0, str(examples_path))
+try:
+    from emotion_report_generator import generate_emotion_report
+except ImportError:
+    # Fallback if module not available
+    def generate_emotion_report(*args, **kwargs):
+        return "Emotion report generation not available (module moved to examples/)"
 
 # Configure logging to stderr so it doesn't interfere with stdio communication
 logging.basicConfig(
