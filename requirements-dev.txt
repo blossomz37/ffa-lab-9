@@ -2,27 +2,25 @@
 -r requirements.txt
 
 # Code formatting and linting
-black>=22.0.0
-flake8>=4.0.0
-mypy>=0.910
-isort>=5.10.0
+black==24.3.0
+flake8==7.0.0
+mypy==1.9.0
+isort==5.13.2
 
 # Pre-commit hooks
-pre-commit>=2.15.0
+pre-commit==3.7.0
 
-# Testing and coverage
-pytest>=6.2.0
-pytest-cov>=2.12.0
-pytest-mock>=3.6.0
+# Testing and coverage  
+pytest-mock==3.14.0
 
 # Documentation
-sphinx>=4.0.0
-sphinx-rtd-theme>=1.0.0
+sphinx==7.3.0
+sphinx-rtd-theme==2.0.0
 
 # Jupyter for interactive development
-jupyter>=1.0.0
-jupyterlab>=3.0.0
+jupyter==1.0.0
+jupyterlab==4.1.5
 
 # Additional development tools
-ipython>=7.0.0
-rich>=10.0.0  # For beautiful console output
+ipython==8.22.2
+rich==14.0.0  # For beautiful console output
