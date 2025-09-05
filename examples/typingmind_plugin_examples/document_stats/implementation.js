@@ -23,8 +23,15 @@ function countSyllables(word) {
   return matches ? matches.length : 1;
 }
 
-function computeStats(rawText, wordsPerPage) {
-  const start = performance.now();
+function nowMs() {
+  if (typeof performance !== 'undefined' && performance && typeof performance.now === 'function') {
+    return performance.now();
+  }
+  return Date.now();
+}
+
+function computeStats(rawText, wordsPerPage, computeReadability) {
+  const start = nowMs();
   const text = (rawText || '').replace(/\r\n?/g, '\n');
   const trimmed = text.trim();
   if (!trimmed) {
@@ -35,7 +42,9 @@ function computeStats(rawText, wordsPerPage) {
       paragraphs: 0,
       pages: 0,
       readability: 0,
-      processingMs: Math.round(performance.now() - start)
+      avgWordsPerSentence: 0,
+      avgSyllablesPerWord: 0,
+      processingMs: Math.round(nowMs() - start)
     };
   }
 
@@ -59,10 +68,10 @@ function computeStats(rawText, wordsPerPage) {
   for (const w of wordsArr) {
     totalSyllables += countSyllables(w.replace(/[^a-zA-Z]/g, ''));
   }
+  const avgWordsPerSentence = sentences > 0 ? words / sentences : 0;
+  const avgSyllablesPerWord = words > 0 ? totalSyllables / words : 0;
   let readability = 0;
-  if (words > 0 && sentences > 0) {
-    const avgWordsPerSentence = words / sentences;
-    const avgSyllablesPerWord = totalSyllables / words;
+  if (computeReadability && words > 0 && sentences > 0) {
     readability = Math.round(206.835 - (1.015 * avgWordsPerSentence) - (84.6 * avgSyllablesPerWord));
     readability = Math.max(0, Math.min(100, readability));
   }
@@ -74,7 +83,9 @@ function computeStats(rawText, wordsPerPage) {
     paragraphs,
     pages,
     readability,
-    processingMs: Math.round(performance.now() - start)
+    avgWordsPerSentence: Number(avgWordsPerSentence.toFixed(2)),
+    avgSyllablesPerWord: Number(avgSyllablesPerWord.toFixed(3)),
+    processingMs: Math.round(nowMs() - start)
   };
 }
 
@@ -85,7 +96,8 @@ async function document_stats(params, userSettings, authorizedResources) {
   const textToAnalyze = explicitText || fallback || '';
 
   const wordsPerPageSetting = Number(userSettings?.words_per_page) || 250;
-  const stats = computeStats(textToAnalyze, wordsPerPageSetting);
+  const computeReadability = (userSettings?.enable_readability !== 'No');
+  const stats = computeStats(textToAnalyze, wordsPerPageSetting, computeReadability);
 
   if (source === 'none') {
     return {
@@ -106,7 +118,9 @@ async function document_stats(params, userSettings, authorizedResources) {
     `Complex Sentences: ${stats.complexSentences.toLocaleString()}`,
     `Paragraphs: ${stats.paragraphs.toLocaleString()}`,
     `Estimated Pages (@${wordsPerPageSetting} wpp): ${stats.pages.toLocaleString()}`,
-    `Readability (Flesch 0-100): ${stats.readability}`,
+    `Avg Words/Sentence: ${stats.avgWordsPerSentence}`,
+    `Avg Syllables/Word: ${stats.avgSyllablesPerWord}`,
+    `Readability (Flesch 0-100): ${computeReadability ? stats.readability : 'Skipped'}`,
     `Processing Time: ${stats.processingMs} ms`,
     `Source: ${source}`
   ];
@@ -118,10 +132,11 @@ async function document_stats(params, userSettings, authorizedResources) {
     }
   ];
 
-  if (userSettings?.return_json_card === 'Yes') {
+  const includeJson = params && params.include_json === true;
+  if (includeJson || userSettings?.return_json_card === 'Yes') {
     cards.push({
       type: 'text',
-      text: 'Raw JSON:\n' + JSON.stringify({ ...stats, source, wordsPerPage: wordsPerPageSetting }, null, 2)
+      text: 'Raw JSON:\n' + JSON.stringify({ ...stats, source, wordsPerPage: wordsPerPageSetting, readabilityComputed: computeReadability }, null, 2)
     });
   }
 
