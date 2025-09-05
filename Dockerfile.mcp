@@ -10,8 +10,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # Create app directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# Install system dependencies and security updates
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     git \
     curl \
     && rm -rf /var/lib/apt/lists/*
@@ -23,13 +23,19 @@ RUN pip install -r requirements.txt
 # Install MCP and FastAPI dependencies explicitly
 RUN pip install mcp>=0.1.0 pydantic>=2.0.0 fastapi>=0.68.0 uvicorn>=0.15.0
 
-# Copy application code
-COPY tools/ ./tools/
-COPY config/ ./config/
-COPY samples/ ./samples/
+# Create non-root user
+RUN useradd --create-home --shell /bin/bash appuser
 
-# Create output directory
-RUN mkdir -p /app/output
+# Copy application code with proper ownership
+COPY --chown=appuser:appuser tools/ ./tools/
+COPY --chown=appuser:appuser config/ ./config/
+COPY --chown=appuser:appuser samples/ ./samples/
+
+# Create output directory with proper permissions
+RUN mkdir -p /app/output && chown -R appuser:appuser /app/output
+
+# Switch to non-root user
+USER appuser
 
 # Expose ports
 EXPOSE 8000 9000

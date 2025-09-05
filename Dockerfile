@@ -1,5 +1,8 @@
 # Multi-stage Dockerfile for FFA Lab 9 - MCP Writing Tools
-FROM python:3.11-slim AS base
+FROM python:3.11-slim-bullseye AS base
+
+# Install security updates
+RUN apt-get update && apt-get upgrade -y && apt-get clean
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
