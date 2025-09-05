@@ -1,0 +1,9 @@
+# Requirements for novel_structural_analysis.py
+# Core NLP library
+spacy>=3.4.0
+
+# Optional visualization support
+matplotlib>=3.5.0
+
+# Note: After installing spacy, you need to download the English model:
+# python -m spacy download en_core_web_md
