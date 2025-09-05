@@ -162,6 +162,8 @@ def describe_emotional_arc(val_roll: List[float], emo_roll: Dict[str, List[float
 
 if __name__ == "__main__":
     # Test with sample data
+    import sys
+    sys.path.append('../../tools')
     from chapter_emotion_arc import analyze
     
     sample_text = "I was happy but then became afraid. The horror was overwhelming. Finally, hope returned."
