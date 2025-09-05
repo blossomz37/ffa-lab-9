@@ -166,4 +166,6 @@ tools/.DS_Store
 tools/.DS_Store
 
 # Allowlist specific TypingMind plugin json (otherwise folder patterns may exclude)
-!/examples/typingmind_plugin_examples/**/tmplugin_*.json
+!/examples/typingmind_plugin_examples/**/*.json
+!/examples/typingmind_plugin_examples/**/*.js
+!/examples/typingmind_plugin_examples/**/*.js

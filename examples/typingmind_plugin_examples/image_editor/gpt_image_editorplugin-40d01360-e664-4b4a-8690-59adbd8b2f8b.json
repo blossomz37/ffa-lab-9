@@ -1,0 +1,69 @@
+{
+    "id": "40d01360-e664-4b4a-8690-59adbd8b2f8b",
+    "code": "async function gpt_image_editor(params, userSettings, authorizedResources) {\n  const prompt = params.prompt;\n  const openaikey = userSettings.openaikey;\n  const quality = userSettings.quality || 'auto';\n  const resolution = userSettings.resolution || 'auto';\n  const background = userSettings.background || 'auto';\n\n  if (!openaikey) {\n    throw new Error(\n      'No OpenAI key provided to the DALL-3 plugin. Please enter your OpenAI key in the plugin settings seperately and try again.'\n    );\n  }\n\n  let resultBase64;\n\n  const content = Array.isArray(authorizedResources?.lastUserMessage?.content)\n    ? authorizedResources?.lastUserMessage?.content\n    : [];\n\n  let attachedImages = content\n    .filter((item) => item.type === 'tm_image_file')\n    .map((c) => ({\n      url: c.sync?.url || c.metadata?.base64,\n      name: c.metadata?.name,\n    }));\n\n  const lastToolCallCards =\n    authorizedResources?.lastSameToolCallResponse?.cards;\n\n  if (!attachedImages.length && Array.isArray(lastToolCallCards)) {\n    attachedImages = lastToolCallCards\n      .filter((c) => c.type === 'image')\n      .map((c) => ({\n        url: c.image.url,\n        name: 'output.png', // no name provided for tool output\n      }));\n  }\n\n  const mode = attachedImages.length ? 'edit' : 'create';\n\n  if (mode === 'create') {\n    const body = {\n      model: 'gpt-image-1',\n      prompt: prompt,\n      n: 1,\n      size: resolution,\n      quality: quality,\n      output_format: 'png',\n      background: background,\n    };\n\n    const requestOptions = {\n      method: 'POST',\n      headers: {\n        'Content-Type': 'application/json',\n        Authorization: 'Bearer ' + openaikey,\n      },\n      body: JSON.stringify(body),\n    };\n\n    let response = await fetch(\n      'https://api.openai.com/v1/images/generations',\n      requestOptions\n    );\n    if (response.status === 401) {\n      throw new Error('Invalid OpenAI API Key. Please check your settings.');\n    }\n\n    if (!response.ok) {\n      const errorText = await response.text();\n      throw new Error(errorText);\n    }\n\n    let data = await response.json();\n\n    resultBase64 = data.data[0].b64_json;\n  } else if (mode === 'edit') {\n    const imagesAsBlobs = await Promise.all(\n      attachedImages.map(async ({ url, name }) => {\n        if (url.startsWith('data:image/')) {\n          const blob = await fetch(url).then((res) => res.blob());\n          return { blob, name };\n        }\n\n        const response = await fetch(url);\n        const blob = await response.blob();\n        return { blob, name };\n      })\n    );\n\n    const formData = new FormData();\n\n    // Model and prompt are simple\n    formData.append('model', 'gpt-image-1');\n    formData.append('prompt', prompt);\n    formData.append('n', 1);\n    formData.append('size', resolution);\n    formData.append('quality', quality);\n    formData.append('output_format', 'png');\n    formData.append('background', background);\n\n    // Load images (from URLs) and append as Blobs\n    for (const { blob, name } of imagesAsBlobs) {\n      formData.append('image[]', blob, name);\n    }\n\n    // Call the API\n    const response = await fetch('https://api.openai.com/v1/images/edits', {\n      method: 'POST',\n      headers: {\n        Authorization: `Bearer ${openaikey}`,\n      },\n      body: formData,\n    });\n\n    if (!response.ok) {\n      const err = await response.text();\n      throw new Error(`OpenAI API error: ${err}`);\n    }\n\n    const result = await response.json();\n\n    // Decode base64 and save as image (browser code varies; see below)\n    resultBase64 = result.data[0].b64_json;\n  } else {\n    throw new Error('Invalid mode. Please use \"create\" or \"edit\".');\n  }\n\n  return {\n    cards: [\n      {\n        type: 'image',\n        image: {\n          url: 'data:image/png;base64,' + resultBase64,\n          alt: prompt.replace(/[[]]/, ''),\n          sync: true,\n        },\n      },\n    ],\n  };\n}\n",
+    "uuid": "40d01360-e664-4b4a-8690-59adbd8b2f8b",
+    "emoji": "🖼️",
+    "title": "GPT Image Editor (Copy)",
+    "createdAt": "2025-08-06T22:51:40.442Z",
+    "githubURL": "https://github.com/TypingMind/plugin-gpt-image-editor",
+    "openaiSpec": {
+        "name": "gpt_image_editor",
+        "parameters": {
+            "type": "object",
+            "required": [
+                "prompt"
+            ],
+            "properties": {
+                "prompt": {
+                    "type": "string",
+                    "description": "The description of the image to generate or to edit."
+                }
+            }
+        },
+        "description": "Generate a new image or edit an existing image as requested by the user."
+    },
+    "outputType": "cards",
+    "sourceUUID": null,
+    "permissions": [
+        "read_last_user_message"
+    ],
+    "preInstalled": true,
+    "userSettings": [
+        {
+            "name": "openaikey",
+            "type": "password",
+            "label": "OpenAI API Key (Required)",
+            "required": true,
+            "description": "The images will be generated using this OpenAI API. Get your API key from https://platform.openai.com/account/api-keys",
+            "placeholder": "sk-******"
+        },
+        {
+            "name": "resolution",
+            "type": "enum",
+            "label": "Resolution",
+            "values": [
+                "auto",
+                "1024x1024",
+                "1536x1024",
+                "1024x1536"
+            ],
+            "description": "Optional, default: \"auto\""
+        },
+        {
+            "name": "quality",
+            "type": "enum",
+            "label": "Quality",
+            "values": [
+                "auto",
+                "high",
+                "medium",
+                "low"
+            ],
+            "description": "Optional, default: \"auto\""
+        }
+    ],
+    "overviewMarkdown": "## GPT Image Editor\n\nGenerate or edit an image with OpenAI's state-of-the-art image generation model GPT Image.\n\nMake sure you’ve entered your OpenAI API key in settings.\n\nExample usage:\n\n> Generate a picture of a cat\n\n> [Image Attachment] Add a hat to this cat\n",
+    "authenticationType": "AUTH_TYPE_NONE",
+    "implementationType": "javascript",
+    "dynamicContextEndpoints": []
+}

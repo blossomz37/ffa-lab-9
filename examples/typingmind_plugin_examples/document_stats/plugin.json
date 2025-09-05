@@ -1,0 +1,57 @@
+{
+  "id": "document_stats_ai",
+  "uuid": "7e3a3d1c-5a1b-4b3f-9b4a-2c1d9f7e8abc",
+  "emoji": "📝",
+  "title": "Document Stats (AI Insights)",
+  "iconURL": null,
+  "overviewMarkdown": "## Document Stats (AI Insights)\n\nReturns structured stats to the AI (not cards) so it can add commentary, suggestions, and format the final message. Optionally includes a markdown or HTML preview snippet.",
+  "openaiSpec": {
+    "name": "document_stats_ai",
+    "description": "Compute document statistics and return structured JSON for the assistant to summarize. The assistant SHOULD reply in Markdown by default. If `response_format` is 'html', the assistant MAY include HTML in its response (note that complex scripts won't execute in chat).",
+    "parameters": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "(Optional) Text to analyze. If omitted, the last user message's text will be used when available."
+        },
+        "response_format": {
+          "type": "string",
+          "enum": ["markdown", "plain", "html"],
+          "description": "Preferred assistant response format. Defaults to 'markdown'."
+        },
+        "include_previews": {
+          "type": "boolean",
+          "description": "If true, include lightweight markdown/html preview snippets in the return for the assistant to use."
+        }
+      }
+    }
+  },
+  "outputType": "respond_to_ai",
+  "authenticationType": "AUTH_TYPE_NONE",
+  "implementationType": "javascript",
+  "permissions": [
+    "read_last_user_message"
+  ],
+  "userSettings": [
+    {
+      "name": "words_per_page",
+      "type": "number",
+      "label": "Words Per Page",
+      "description": "Used for estimated pages calculation.",
+      "defaultValue": 250
+    },
+    {
+      "name": "enable_readability",
+      "type": "enum",
+      "values": ["Yes", "No"],
+      "label": "Compute Readability",
+      "defaultValue": "Yes",
+      "description": "Toggle Flesch Reading Ease calculation."
+    }
+  ],
+  "dynamicContextEndpoints": [],
+  "code": "function safeGetLastUserPlainText(authorizedResources) {\n  if (!authorizedResources || !authorizedResources.lastUserMessage) return null;\n  const content = authorizedResources.lastUserMessage.content;\n  if (!Array.isArray(content)) return null;\n  for (const item of content) {\n    if (item && (item.type === 'text' || item.type === 'plain_text')) {\n      if (typeof item.text === 'string') return item.text;\n      if (typeof item.plain_text === 'string') return item.plain_text;\n      if (typeof item.value === 'string') return item.value;\n    }\n  }\n  return null;\n}\n\nfunction countSyllables(word) {\n  if (!word) return 0;\n  word = word.toLowerCase();\n  if (word.length <= 3) return 1;\n  word = word.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/i, '');\n  word = word.replace(/^y/, '');\n  const matches = word.match(/[aeiouy]{1,2}/g);\n  return matches ? matches.length : 1;\n}\n\nfunction nowMs() {\n  if (typeof performance !== 'undefined' && performance && typeof performance.now === 'function') {\n    return performance.now();\n  }\n  return Date.now();\n}\n\nfunction computeStats(rawText, wordsPerPage, computeReadability) {\n  const start = nowMs();\n  const text = (rawText || '').replace(/\\r\\n?/g, '\\n');\n  const trimmed = text.trim();\n  if (!trimmed) {\n    return {\n      words: 0, sentences: 0, complexSentences: 0, paragraphs: 0, pages: 0, readability: 0,\n      avgWordsPerSentence: 0, avgSyllablesPerWord: 0, processingMs: Math.round(nowMs() - start)\n    };\n  }\n  const wordsArr = trimmed.split(/\\s+/).filter(w => w.length > 0);\n  const words = wordsArr.length;\n  const sentenceEndings = trimmed.match(/[.!?]+/g) || [];\n  const sentences = sentenceEndings.length || (words > 0 ? 1 : 0);\n  const paragraphArr = trimmed.split(/\\n\\s*\\n/).filter(p => p.trim().length > 0);\n  const paragraphs = paragraphArr.length;\n  const pages = words === 0 ? 0 : Math.ceil(words / Math.max(1, wordsPerPage));\n  const sentenceTexts = trimmed.split(/[.!?]+/).filter(s => s.trim().length > 0);\n  const complexSentences = sentenceTexts.filter(s => {\n    const lower = s.toLowerCase();\n    return /,|;/.test(lower) || /\\\b(and|but|or|nor|for|so|yet|because|although|since|while|if|unless|when|where|whereas)\\\b/.test(lower);\n  }).length;\n  let totalSyllables = 0;\n  for (const w of wordsArr) totalSyllables += countSyllables(w.replace(/[^a-zA-Z]/g, ''));\n  const avgWordsPerSentence = sentences > 0 ? words / sentences : 0;\n  const avgSyllablesPerWord = words > 0 ? totalSyllables / words : 0;\n  let readability = 0;\n  if (computeReadability && words > 0 && sentences > 0) {\n    readability = Math.round(206.835 - (1.015 * avgWordsPerSentence) - (84.6 * avgSyllablesPerWord));\n    readability = Math.max(0, Math.min(100, readability));\n  }\n  return {\n    words, sentences, complexSentences, paragraphs, pages, readability,\n    avgWordsPerSentence: Number(avgWordsPerSentence.toFixed(2)),\n    avgSyllablesPerWord: Number(avgSyllablesPerWord.toFixed(3)),\n    processingMs: Math.round(nowMs() - start)\n  };\n}\n\nasync function document_stats_ai(params, userSettings, authorizedResources) {\n  const explicitText = params && typeof params.text === 'string' ? params.text : null;\n  const fallback = safeGetLastUserPlainText(authorizedResources);\n  const source = explicitText ? 'parameter:text' : (fallback ? 'last_user_message' : 'none');\n  const textToAnalyze = explicitText || fallback || '';\n  const wordsPerPageSetting = Number(userSettings?.words_per_page) || 250;\n  const computeReadability = (userSettings?.enable_readability !== 'No');\n  const stats = computeStats(textToAnalyze, wordsPerPageSetting, computeReadability);\n  const responseFormat = (params && typeof params.response_format === 'string') ? params.response_format : 'markdown';\n  const includePreviews = !!(params && params.include_previews === true);\n\n  const meta = {\n    source, wordsPerPage: wordsPerPageSetting, readabilityComputed: computeReadability\n  };\n\n  // Lightweight tips the assistant can weave into its summary\n  const suggestions = [];\n  if (stats.avgWordsPerSentence > 25) suggestions.push('Consider shortening sentences for clarity.');\n  if (stats.readability && stats.readability < 50) suggestions.push('Reading ease is low; simplify vocabulary or structure.');\n  if (stats.complexSentences > Math.max(1, Math.round(stats.sentences * 0.3))) suggestions.push('There are many complex sentences; vary sentence length.');\n\n  const previews = {};\n  if (includePreviews) {\n    const lines = [\n      '# Document Statistics',\n      `- Words: ${stats.words.toLocaleString()}`,\n      `- Sentences: ${stats.sentences.toLocaleString()}`,\n      `- Complex Sentences: ${stats.complexSentences.toLocaleString()}`,\n      `- Paragraphs: ${stats.paragraphs.toLocaleString()}`,\n      `- Estimated Pages (@${wordsPerPageSetting} wpp): ${stats.pages.toLocaleString()}`,\n      `- Avg Words/Sentence: ${stats.avgWordsPerSentence}`,\n      `- Avg Syllables/Word: ${stats.avgSyllablesPerWord}`,\n      `- Readability (Flesch 0-100): ${computeReadability ? stats.readability : 'Skipped'}`,\n      `- Source: ${source}`\n    ];\n    previews.markdown = lines.join('\\n');\n    previews.html = `<div><h2>Document Statistics</h2><ul>\n<li><b>Words:</b> ${stats.words.toLocaleString()}</li>\n<li><b>Sentences:</b> ${stats.sentences.toLocaleString()}</li>\n<li><b>Complex Sentences:</b> ${stats.complexSentences.toLocaleString()}</li>\n<li><b>Paragraphs:</b> ${stats.paragraphs.toLocaleString()}</li>\n<li><b>Estimated Pages (@${wordsPerPageSetting} wpp):</b> ${stats.pages.toLocaleString()}</li>\n<li><b>Avg Words/Sentence:</b> ${stats.avgWordsPerSentence}</li>\n<li><b>Avg Syllables/Word:</b> ${stats.avgSyllablesPerWord}</li>\n<li><b>Readability (Flesch 0-100):</b> ${computeReadability ? stats.readability : 'Skipped'}</li>\n<li><b>Source:</b> ${source}</li>\n</ul></div>`;\n  }\n\n  return {\n    stats, meta, suggestions, responseFormat, previews\n  };\n}\n",
+  "sourceUUID": null
+}
