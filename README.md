@@ -64,6 +64,12 @@ docker build -f Dockerfile.mcp -t emotion-mcp:latest .
 docker run -p 8000:8000 emotion-mcp:latest
 ```
 
+## Success Message:
+The emotion arc API is now running successfully at http://localhost:8000! 
+Visit http://localhost:8000/docs for the interactive API
+  documentation.
+
+
 ## 📁 Project Structure
 
 ```

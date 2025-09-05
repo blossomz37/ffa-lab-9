@@ -1,0 +1,21 @@
+# Simplified Docker Compose - Just the essentials for emotion arc analysis
+services:
+  # FastAPI server for emotion arc analysis
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp
+    container_name: emotion-arc-api
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./samples:/app/samples:ro
+      - ./output:/app/output
+    command: python tools/emotion_arc_api_server.py --host 0.0.0.0 --port 8000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

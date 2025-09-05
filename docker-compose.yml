@@ -16,16 +16,17 @@ services:
     tty: true
 
   # Production environment for running analysis
-  analyzer:
-    build:
-      context: .
-      target: production
-    volumes:
-      - ./samples:/app/samples:ro
-      - ./output:/app/output
-    environment:
-      - PYTHONPATH=/app
-    command: python tools/writers_room_v2.py
+  # analyzer service disabled - writers_room_v2.py moved to examples/
+  # analyzer:
+  #   build:
+  #     context: .
+  #     target: production
+  #   volumes:
+  #     - ./samples:/app/samples:ro
+  #     - ./output:/app/output
+  #   environment:
+  #     - PYTHONPATH=/app
+  #   command: python examples/writing_analysis/writers_room_v2.py
 
   # Jupyter notebook server for interactive development
   jupyter:
@@ -35,7 +36,7 @@ services:
     volumes:
       - .:/app
     ports:
-      - "8888:8888"
+      - "8889:8888"  # Changed from 8888:8888 to avoid conflicts
     environment:
       - JUPYTER_ENABLE_LAB=yes
       - PYTHONPATH=/app
